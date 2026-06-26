@@ -26,7 +26,19 @@ async def main():
 
     config = DBConfig()
     pool = ConnectionPool(config)
-    await pool.init()
+    
+    # Retry loop to wait for postgres to be ready
+    max_retries = 10
+    for i in range(max_retries):
+        try:
+            await pool.init()
+            break
+        except Exception as e:
+            logger.warning(f"Database connection failed, retrying in 2 seconds... ({i+1}/{max_retries}) Error: {e}")
+            await asyncio.sleep(2)
+    else:
+        logger.error("Could not connect to the database after maximum retries.")
+        return
     
     ops = DBOperations(pool)
     bus_client = RedisBusClient()

@@ -13,6 +13,7 @@ class ConnectionPool:
 
     async def init(self):
         async def init_connection(conn):
+            await conn.execute('CREATE EXTENSION IF NOT EXISTS vector')
             await register_vector(conn)
             
         self._pool = await asyncpg.create_pool(
